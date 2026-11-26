@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BolKhata AI — Hands-Free Kirana Voice Copilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- ====================================================================
+         LEFT PANEL: DARK NAVY VOICE COPILOT
+         ==================================================================== -->
+    <aside class="voice-panel">
+      <!-- Top Header & Live Latency Badge -->
+      <header class="voice-header">
+        <div class="brand-lockup">
+          <div class="brand-logo" aria-hidden="true">
+            <span class="brand-dot"></span>
+          </div>
+          <div>
+            <h1 class="brand-title">BolKhata <span class="brand-accent">AI</span></h1>
+            <p class="brand-subtitle" id="storeNameLabel">Sharma Kirana &amp; General Store</p>
+          </div>
+        </div>
+
+        <div class="latency-badge" id="latencyBadge">
+          <span class="status-led" id="connectionLed"></span>
+          <span id="latencyText">Response: -- ms</span>
+          <span class="badge-divider">|</span>
+          <span id="bargeInText">Barge-in: Ready</span>
+        </div>
+      </header>
+
+      <!-- Active ADK Sub-Agent Routing Strip -->
+      <div class="agent-strip" aria-label="Google ADK Multi-Agent Hierarchy">
+        <span class="strip-label">ADK Router:</span>
+        <span class="agent-pill active" id="agentPill-bolkhata_root" data-agent="bolkhata_root">Root Copilot</span>
+        <span class="agent-pill" id="agentPill-khata_agent" data-agent="khata_agent">Khata</span>
+        <span class="agent-pill" id="agentPill-inventory_agent" data-agent="inventory_agent">Inventory</span>
+        <span class="agent-pill" id="agentPill-collections_agent" data-agent="collections_agent">Collections</span>
+      </div>
+
+      <!-- Centered Animated Glowing Blue-Teal Voice Orb -->
+      <section class="orb-stage">
+        <div class="orb-wrapper" id="orbWrapper" data-state="idle">
+          <div class="orb-halo orb-halo-outer"></div>
+          <div class="orb-halo orb-halo-inner"></div>
+          <button
+            type="button"
+            class="voice-orb"
+            id="micToggleBtn"
+            aria-label="Start or Stop Voice Copilot Microphone"
+          >
+            <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" x2="12" y1="19" y2="22" />
+              <line x1="8" x2="16" y1="22" y2="22" />
+            </svg>
+            <span class="orb-btn-label" id="orbActionText">Tap to Speak</span>
+          </button>
+        </div>
+
+        <p class="orb-status-caption" id="orbStatusCaption">
+          Hands-free Hinglish &amp; Indian English • 16kHz Gemini Live BIDI
+        </p>
+
+        <!-- Quick Text Prompt Fallback / Demo Bar -->
+        <form class="quick-prompt-bar" id="quickPromptForm">
+          <input
+            type="text"
+            id="quickPromptInput"
+            placeholder='Try: "Ramesh ka khata balance kitna hai?" or speak live...'
+            autocomplete="off"
+          />
+          <button type="submit" class="btn-send-text">Send</button>
+        </form>
+      </section>
+
+      <!-- Live Scrolling Code-Switched Transcript + HITL Audit Pills -->
+      <section class="transcript-section">
+        <div class="transcript-header">
+          <span class="transcript-title">Live Conversation &amp; ADK Audit Trail</span>
+          <span class="hitl-guard-tag" title="Mandatory Voice Read-Back Guardrail Enabled">
+            HITL Guardrail: ON
+          </span>
+        </div>
+
+        <div class="transcript-feed" id="transcriptFeed">
+          <div class="transcript-empty" id="transcriptEmpty">
+            <p class="empty-headline">Namaste! BolKhata Voice Copilot is ready.</p>
+            <p class="empty-hints">
+              Try saying: <em>"Ramesh ke khate mein 250 rupaye 5 kilo Atta likho"</em>,
+              <em>"Kaunsa stock kam hai?"</em>, or <em>"Suresh ko WhatsApp reminder bhejo"</em>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer Controls: Reset Session (Credit Saver) & Benchmark Stopwatch -->
+      <footer class="voice-footer">
+        <button type="button" class="btn-reset-session" id="resetSessionBtn" title="Clear Gemini Live context window to keep credit burn low">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+          Reset Session
+        </button>
+
+        <div class="benchmark-widget" title="Khatabook Manual Entry vs. BolKhata Voice Speed Benchmark">
+          <span class="benchmark-label">Benchmark:</span>
+          <span class="benchmark-time" id="benchmarkDisplay">00.0s</span>
+          <button type="button" class="btn-benchmark" id="benchmarkToggleBtn">Start</button>
+          <button type="button" class="btn-benchmark-reset" id="benchmarkResetBtn" aria-label="Reset timer">↺</button>
+        </div>
+      </footer>
+    </aside>
+
+    <!-- ====================================================================
+         RIGHT PANEL: CLEAN LIGHT CARDS (AUTO-REFRESHES ON TOOL EVENTS)
+         ==================================================================== -->
+    <main class="dashboard-panel">
+      <!-- Top Bar -->
+      <header class="dashboard-header">
+        <div>
+          <h2 class="dashboard-title">Live Kirana Counter Ledger &amp; Operations</h2>
+          <p class="dashboard-subtitle">
+            Auto-synced with Google ADK tool executions •
+            <span class="upi-chip" id="storeUpiChip">UPI: sharmakirana@okaxis</span>
+          </p>
+        </div>
+        <div class="dashboard-actions">
+          <span class="sync-indicator" id="lastSyncBadge">Synced just now</span>
+          <button type="button" class="btn-refresh" id="manualRefreshBtn">Refresh</button>
+        </div>
+      </header>
+
+      <!-- Row 1: Daily Summary KPIs (Cash Collected vs. Credit Given vs. Total Dues) -->
+      <section class="summary-grid" aria-label="Daily Store Summary">
+        <article class="kpi-card kpi-credit">
+          <div class="kpi-meta">
+            <span class="kpi-label">Total Udhaar (Credit Given)</span>
+            <span class="kpi-tag">Ledger Debit</span>
+          </div>
+          <div class="kpi-value" id="kpiTotalCredit">₹0</div>
+          <p class="kpi-sub" id="kpiTxCount">0 recorded transactions</p>
+        </article>
+
+        <article class="kpi-card kpi-cash">
+          <div class="kpi-meta">
+            <span class="kpi-label">Vasooli (Payments Collected)</span>
+            <span class="kpi-tag kpi-tag-green">Cash / UPI Jama</span>
+          </div>
+          <div class="kpi-value kpi-value-green" id="kpiTotalPayments">₹0</div>
+          <p class="kpi-sub">Confirmed settlements</p>
+        </article>
+
+        <article class="kpi-card kpi-outstanding">
+          <div class="kpi-meta">
+            <span class="kpi-label">Net Market Outstanding</span>
+            <span class="kpi-tag kpi-tag-amber">Active Khata Dues</span>
+          </div>
+          <div class="kpi-value kpi-value-amber" id="kpiTotalOutstanding">₹0</div>
+          <p class="kpi-sub" id="kpiCustomerCount">Across 0 customers</p>
+        </article>
+      </section>
+
+      <!-- Row 2: Live Khata Ledger + Low Stock Alerts -->
+      <div class="cards-two-col">
+        <!-- Card 1: Live Khata Ledger -->
+        <section class="light-card" id="khataCard">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Live Khata Ledger (Udhaar Book)</h3>
+              <p class="card-caption">Flashes green when updated via voice confirmation</p>
+            </div>
+            <span class="card-badge" id="khataCountBadge">0 Customers</span>
+          </div>
+
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Last Activity</th>
+                  <th class="text-right">Balance Due</th>
+                </tr>
+              </thead>
+              <tbody id="khataTableBody">
+                <tr>
+                  <td colspan="4" class="table-loading">Loading customer khata balances...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Card 2: Low Stock Alerts -->
+        <section class="light-card" id="inventoryCard">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Low Stock &amp; Inventory Alerts</h3>
+              <p class="card-caption">Items at or below reorder threshold</p>
+            </div>
+            <span class="card-badge badge-warning" id="lowStockCountBadge">0 Alerts</span>
+          </div>
+
+          <div class="low-stock-list" id="lowStockList">
+            <!-- Populated by app.js -->
+          </div>
+
+          <div class="inventory-mini-header">All Store Inventory</div>
+          <div class="inventory-pills" id="allInventoryPills">
+            <!-- Populated by app.js -->
+          </div>
+        </section>
+      </div>
+
+      <!-- Row 3: Collections Recovery Pilot Card -->
+      <section class="light-card recovery-card" id="collectionsCard">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">Collections Recovery Pilot (WhatsApp Reminders)</h3>
+            <p class="card-caption">
+              Automated Hinglish/Hindi payment reminders with one-click WhatsApp &amp; instant ledger settlement
+            </p>
+          </div>
+          <div class="recovery-metrics-strip">
+            <div class="recovery-stat">
+              <span class="stat-label">Sent</span>
+              <strong class="stat-num" id="recSentCount">0</strong>
+            </div>
+            <div class="recovery-stat">
+              <span class="stat-label">Paid</span>
+              <strong class="stat-num stat-green" id="recPaidCount">0</strong>
+            </div>
+            <div class="recovery-stat">
+              <span class="stat-label">Recovered</span>
+              <strong class="stat-num stat-green" id="recRecoveredAmount">₹0</strong>
+            </div>
+            <div class="recovery-stat">
+              <span class="stat-label">Recovery Rate</span>
+              <strong class="stat-num stat-teal" id="recRecoveryPct">0%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="reminders-list" id="remindersList">
+          <!-- Populated by app.js -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
